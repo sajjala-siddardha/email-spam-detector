@@ -1,4 +1,4 @@
-![License](https://img.shields.io/github/license/singia1000/email-spam-detector?style=for-the-badge)
+![License](https://img.shields.io/github/license/sajjala-siddardha/email-spam-detector?style=for-the-badge)
 # ⚡ AI Spam & Phishing Detector
 ### **Email Spam Detection • URL Phishing Scan • QR Text Scanner • Risk Dashboard**
 
@@ -156,4 +156,5 @@ AIML @ SRKR Engineering College
 ## ⭐ Support This Project
 If this project helped you, please **⭐ star the repository**.  
 Your support motivates future improvements and new features!
+
 
