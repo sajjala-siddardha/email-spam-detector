@@ -1,8 +1,7 @@
 # ======================== IMPORTS ============================
+import sys
 import os
 from pathlib import Path
-import sqlite3
-from datetime import datetime
 
 import streamlit as st
 import pickle
@@ -14,8 +13,6 @@ from collections import Counter
 
 import plotly.express as px
 import plotly.graph_objects as go
-
-from pyzbar.pyzbar import decode
 from PIL import Image
 
 # ========================= PAGE CONFIG =========================
@@ -29,54 +26,12 @@ st.set_page_config(
 APP_DIR = os.path.dirname(os.path.abspath(__file__))
 PROJECT_ROOT = os.path.dirname(APP_DIR)
 BASELINE_MODEL_PATH = Path(PROJECT_ROOT, "models/baseline_model.pkl")
-DB_PATH = Path(PROJECT_ROOT, "spam_history.db")
 
-# ========================= DB SETUP =============================
-
-@st.cache_resource
-def get_db_conn():
-    conn = sqlite3.connect(DB_PATH, check_same_thread=False)
-    conn.execute("""
-        CREATE TABLE IF NOT EXISTS history (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
-            ts TEXT,
-            label TEXT,
-            spam_prob REAL,
-            risk_score INTEGER,
-            url_count INTEGER,
-            has_qr INTEGER,
-            snippet TEXT
-        )
-    """)
-    conn.commit()
-    return conn
-
-def log_prediction(conn, label, spam_prob, risk_score, url_count, has_qr, text):
-    snippet = (text[:120] + "...") if len(text) > 120 else text
-    conn.execute(
-        "INSERT INTO history (ts, label, spam_prob, risk_score, url_count, has_qr, snippet) VALUES (?, ?, ?, ?, ?, ?, ?)",
-        (datetime.utcnow().isoformat(), label, float(spam_prob), int(risk_score), int(url_count), int(has_qr), snippet)
-    )
-    conn.commit()
-
-def load_history(conn, limit=20):
-    cur = conn.cursor()
-    cur.execute("""
-        SELECT ts, label, spam_prob, risk_score, url_count, has_qr, snippet
-        FROM history
-        ORDER BY id DESC
-        LIMIT ?
-    """, (limit,))
-    rows = cur.fetchall()
-    return rows
-
-db_conn = get_db_conn()
-
-# ========================= LOAD MODEL ============================
+# ========================= LOAD ML MODEL ==========================
 
 @st.cache_resource
 def load_model():
-    with open(Baseline_MODEL_PATH, "rb") as f:
+    with open(BASELINE_MODEL_PATH, "rb") as f:
         m = pickle.load(f)
     return m["vectorizer"], m["classifier"]
 
@@ -90,14 +45,14 @@ SUSPICIOUS_TLDS = {
 }
 
 URL_SHORTENERS = {
-    "bit.ly", "tinyurl.com", "t.co", "goo.gl", "is.gd", "buff.ly",
-    "ow.ly", "cutt.ly", "rb.gy", "rebrand.ly"
+    "bit.ly", "tinyurl.com", "t.co", "goo.gl", "is.gd", "buff.ly", "ow.ly",
+    "cutt.ly", "rb.gy", "rebrand.ly"
 }
 
 PHISHING_KEYWORDS = [
     "login", "verify", "update", "secure", "account", "bank",
-    "wallet", "password", "reset", "payment", "confirm",
-    "support", "security", "unlock"
+    "wallet", "password", "reset", "payment", "confirm", "support",
+    "security", "unlock"
 ]
 
 def extract_urls(text):
@@ -129,14 +84,14 @@ def analyze_single_url(url):
     try:
         ipaddress.ip_address(dom)
         score += 3
-        reasons.append("IP-based URL")
+        reasons.append("IP-based URL (common in phishing)")
     except:
         pass
 
     for kw in PHISHING_KEYWORDS:
         if kw in (domain + path):
             score += 2
-            reasons.append(f"Contains '{kw}'")
+            reasons.append(f"Contains keyword '{kw}'")
             break
 
     if score >= 7:
@@ -146,14 +101,20 @@ def analyze_single_url(url):
     else:
         lvl, emoji = "SAFE", "🟩"
 
-    return {"url": url, "score": score, "level": lvl, "emoji": emoji, "reasons": reasons or ["No suspicious indicators"]}
+    return {
+        "url": url,
+        "score": score,
+        "level": lvl,
+        "emoji": emoji,
+        "reasons": reasons or ["No suspicious indicators"]
+    }
 
 def analyze_urls(urls):
     if not urls:
         return [], 0
-    items = [analyze_single_url(u) for u in urls]
-    max_score = max(x["score"] for x in items)
-    return items, max_score
+    analyzed = [analyze_single_url(u) for u in urls]
+    max_score = max(a["score"] for a in analyzed)
+    return analyzed, max_score
 
 # ========================= RISK SCORE ===============================
 
@@ -167,10 +128,14 @@ def risk_label(score):
         return "🟧 MEDIUM RISK"
     return "🟩 LOW RISK"
 
+
 # ========================= CUSTOM CSS ==========================
+
 st.markdown("""
 <style>
 body { background-color:#0E0F12; }
+.main { background-color:#0E0F12; }
+
 .header {
     font-size:48px;
     font-weight:900;
@@ -184,83 +149,83 @@ body { background-color:#0E0F12; }
     font-size:18px;
     color:#AFAFAF;
     text-align:center;
+    margin-bottom:30px;
 }
 .glass-box {
     background:rgba(255,255,255,0.05);
     padding:25px;
     border-radius:18px;
-    border:1px solid rgba(0,255,255,0.2);
-    backdrop-filter:blur(10px);
+    border:1px solid rgba(0,255,255,0.25);
+    backdrop-filter:blur(12px);
 }
 footer { visibility:hidden; }
 </style>
 """, unsafe_allow_html=True)
 
+
 # ========================= HEADER ==============================
 st.markdown("<h1 class='header'>⚡ AI Spam Detector</h1>", unsafe_allow_html=True)
-st.markdown("<p class='sub-header'>Spam Classifier • URL Scanner • QR Decoder • Risk & History Dashboard</p>", unsafe_allow_html=True)
+st.markdown("<p class='sub-header'>Spam Classifier • URL Phishing Scanner • QR Scanner • Risk Dashboard</p>", unsafe_allow_html=True)
 st.markdown("---")
 
+
 # ========================= LAYOUT ===============================
-left, right = st.columns([2.4, 1])
+col_left, col_right = st.columns([2.3, 1])
+
 
 # ========================= LEFT SIDE ============================
-with left:
+with col_left:
 
+    # ======= EMAIL INPUT BOX ========
     st.markdown("<div class='glass-box'>", unsafe_allow_html=True)
     st.markdown("### 📩 Enter Email Content")
+
     email_text = st.text_area(
         "Email Content",
-        height=200,
-        placeholder="Paste email here...",
+        height=220,
+        placeholder="Paste email text here...",
         label_visibility="collapsed"
     )
     st.markdown("</div>", unsafe_allow_html=True)
 
     st.markdown("<br>", unsafe_allow_html=True)
 
+    # ======= QR TEXT INPUT (Safe Alternative) ========
     st.markdown("<div class='glass-box'>", unsafe_allow_html=True)
-    st.markdown("### 📷 QR Scanner (Upload Image)")
-    qr_file = st.file_uploader("Upload QR Code Image", type=["png", "jpg", "jpeg"], label_visibility="collapsed")
-
-    extracted_qr_text = ""
-    has_qr = 0
-
-    if qr_file:
-        img = Image.open(qr_file)
-        decoded = decode(img)
-        if decoded:
-            extracted_qr_text = decoded[0].data.decode("utf-8")
-            has_qr = 1
-            st.success("QR Code Decoded!")
-            st.write(extracted_qr_text)
-        else:
-            st.error("No QR code detected.")
+    st.markdown("### 📷 QR Content")
+    qr_text = st.text_input(
+        "Paste QR decoded text here",
+        placeholder="Example: https://phishing-link.com/login",
+        label_visibility="collapsed"
+    )
     st.markdown("</div>", unsafe_allow_html=True)
 
     st.markdown("<br>", unsafe_allow_html=True)
 
+    # ================= RUN ANALYSIS ==================
     if st.button("🔍 Analyze Email", use_container_width=True):
-        text = (email_text + " " + extracted_qr_text).strip()
+
+        # Combine email + QR
+        text = (email_text + " " + qr_text).strip()
 
         if not text:
-            st.warning("Please enter or upload something.")
+            st.warning("Please enter email text or QR text.")
             st.stop()
 
-        # SPAM
+        # ---- SPAM DETECTION ----
         X = vectorizer.transform([text])
         spam_prob = classifier.predict_proba(X)[0][1]
-        label = "SPAM" if spam_prob >= 0.5 else "NOT SPAM"
-        pretty_label = "🛑 SPAM" if label == "SPAM" else "✅ NOT SPAM"
+        spam_lbl = "🛑 SPAM" if spam_prob >= 0.5 else "✅ NOT SPAM"
 
-        st.write(f"### {pretty_label}")
+        st.write(f"### {spam_lbl}")
         st.write(f"Spam Probability: `{spam_prob:.4f}`")
 
-        # URL Analysis
+        # ---- URL ANALYSIS ----
         urls = extract_urls(text)
         url_info, url_score = analyze_urls(urls)
 
         st.markdown("### 🔗 URL Analysis")
+
         if urls:
             for u in url_info:
                 st.markdown(f"**{u['emoji']} {u['level']}** — `{u['url']}`")
@@ -269,37 +234,29 @@ with left:
         else:
             st.info("No URLs detected.")
 
-        # TOTAL RISK
+        # ---- TOTAL RISK SCORE ----
         total = compute_risk(spam_prob, url_score)
-        lvl = risk_label(total)
+        level = risk_label(total)
 
+        st.markdown("<br>", unsafe_allow_html=True)
         st.markdown(f"### ⚠ Total Risk Score: **{total}/100**")
-        st.markdown(f"## {lvl}")
+        st.markdown(f"## {level}")
         st.progress(total / 100)
 
-        # LOG TO DB
-        log_prediction(
-            db_conn,
-            label=label,
-            spam_prob=spam_prob,
-            risk_score=total,
-            url_count=len(urls),
-            has_qr=has_qr,
-            text=text
-        )
-
-        # DASHBOARD
+        # ---------- DASHBOARD ----------
         st.markdown("---")
         st.markdown("## 📊 Email Analysis Dashboard")
 
-        bar_fig = go.Figure(go.Bar(
+        # BAR CHART
+        chart = go.Figure(go.Bar(
             x=["Spam", "Not Spam"],
             y=[spam_prob, 1 - spam_prob],
             marker_color=["red", "green"]
         ))
-        bar_fig.update_layout(title="Spam vs Not Spam")
-        st.plotly_chart(bar_fig, use_container_width=True)
+        chart.update_layout(title="Spam vs Not-Spam")
+        st.plotly_chart(chart, use_container_width=True)
 
+        # GAUGE
         gauge = go.Figure(go.Indicator(
             mode="gauge+number",
             value=total,
@@ -316,6 +273,7 @@ with left:
         ))
         st.plotly_chart(gauge, use_container_width=True)
 
+        # DONUT CHART IF URLS
         if urls:
             counts = Counter([u["level"] for u in url_info])
             donut = go.Figure(go.Pie(
@@ -326,31 +284,42 @@ with left:
             donut.update_layout(title="URL Risk Breakdown")
             st.plotly_chart(donut, use_container_width=True)
 
+        # KEYWORD FREQUENCY
+        words = text.lower().split()
+        sus = [w for w in words if any(k in w for k in PHISHING_KEYWORDS)]
+        if sus:
+            freq = Counter(sus)
+            df = {"Word": list(freq.keys()), "Count": list(freq.values())}
+            bar = px.bar(df, x="Word", y="Count", title="Suspicious Keyword Frequency")
+            st.plotly_chart(bar, use_container_width=True)
+
+
 # ========================= RIGHT SIDE ==========================
-with right:
+with col_right:
+
+    st.markdown("<div class='glass-box'>", unsafe_allow_html=True)
+    st.markdown("### 📊 Model Information")
+    st.write("- **Model:** TF-IDF + Logistic Regression")
+    st.write("- **Accuracy:** ~98–99%")
+    st.write("- **Pure CPU model (no heavy dependencies)**")
+    st.write("- **Fast & ultra lightweight**")
+    st.markdown("</div>", unsafe_allow_html=True)
+
+    st.markdown("<br>", unsafe_allow_html=True)
+
+    st.markdown("<div class='glass-box'>", unsafe_allow_html=True)
+    st.markdown("### 🧪 Risk Legend")
+    st.write("🟩 SAFE / LOW RISK")
+    st.write("🟧 MEDIUM RISK")
+    st.write("🟥 HIGH RISK")
+    st.markdown("</div>", unsafe_allow_html=True)
+
+    st.markdown("<br>", unsafe_allow_html=True)
 
     st.markdown("<div class='glass-box'>", unsafe_allow_html=True)
     st.markdown("### 👨‍💻 Developer")
     st.write("**Sajjala Siddardha**")
     st.write("AIML @ SRKR Engineering College")
     st.write("[🌐 Portfolio](https://sajjala-portfolio.vercel.app)")
-    st.write("📧 **siddardhagaming@gmail.com**")
-    st.markdown("</div>", unsafe_allow_html=True)
-
-    st.markdown("<br>", unsafe_allow_html=True)
-
-    st.markdown("<div class='glass-box'>", unsafe_allow_html=True)
-    st.markdown("### 📜 Recent Scan History")
-
-    rows = load_history(db_conn, limit=20)
-    if rows:
-        import pandas as pd
-        df = pd.DataFrame(rows, columns=[
-            "Timestamp (UTC)", "Label", "Spam Prob", "Risk Score",
-            "URL Count", "Has QR", "Snippet"
-        ])
-        df["Spam Prob"] = df["Spam Prob"].round(4)
-        st.dataframe(df, use_container_width=True, height=350)
-    else:
-        st.info("No scans logged yet. Run an analysis to populate history.")
+    st.write("📧 Email: **siddardhagaming@gmail.com**")
     st.markdown("</div>", unsafe_allow_html=True)
