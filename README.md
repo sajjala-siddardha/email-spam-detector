@@ -1,83 +1,86 @@
-<h1 align="center">⚡ AI Spam & Phishing Detector</h1>
+# ⚡ AI Spam & Phishing Detector
+### **Email Spam Detection • URL Phishing Scan • QR Text Scanner • Risk Dashboard**
 
-<p align="center">
-  <b>Email Spam Detection • URL Phishing Scanner • QR Text Scanner • Risk Dashboard</b>
-</p>
-
-<p align="center">
-  <img src="https://img.shields.io/badge/Streamlit-Deployed-brightgreen?style=flat-square&logo=streamlit" />
-  <img src="https://img.shields.io/badge/Python-3.10-blue?style=flat-square&logo=python" />
-  <img src="https://img.shields.io/badge/ML-ScikitLearn-orange?style=flat-square&logo=scikitlearn" />
-  <img src="https://img.shields.io/github/license/sajjala-siddardha/email-spam-detector?style=flat-square" />
-  <img src="https://img.shields.io/github/stars/sajjala-siddardha/email-spam-detector?style=flat-square" />
-</p>
+[![Streamlit App](https://img.shields.io/badge/Live_App-Streamlit-brightgreen?logo=streamlit)](https://email-spam-detector-score.streamlit.app)
+[![Python](https://img.shields.io/badge/Python-3.10-blue?logo=python)]()
+![License](https://img.shields.io/badge/License-MIT-green.svg)
+![Status](https://img.shields.io/badge/Status-Production_Ready-success)
+![Stars](https://img.shields.io/github/stars/sajjala-siddardha/email-spam-detector?style=social)
 
 ---
 
-## 🚀 Live App  
-🔗 **https://email-spam-detector-score.streamlit.app**
+## 🚀 **Live App**
+👉 **https://email-spam-detector-score.streamlit.app**
 
 ---
 
+## 🎯 **Project Summary**
+
+This project is an **AI-powered security tool** that identifies:
+
+🔹 **Spam Emails** using a machine learning classifier  
+🔹 **Phishing URLs** with rule-based analysis  
+🔹 **QR Code Text Scanning (manual text input)**  
+🔹 **Combined Risk Score (0–100)**  
+🔹 **Interactive Visual Dashboard** for insights  
+
+Fast, lightweight, and fully deployable using **Streamlit Cloud**.
 
 ---
 
-## 🎯 Overview  
-An AI-powered security tool that detects:
+## ✨ **Key Features**
 
-- **Spam Emails** using machine learning  
-- **Phishing URLs** using advanced rule-based checks  
-- **QR Code Text Analysis** *(image QR decoding not supported on Streamlit Cloud)*  
-- **Risk Scoring (0–100)**  
-- **Interactive Visualization Dashboard**
-
-Fast • Lightweight • Cloud Deployable
-
----
-
-## 📌 Features  
-
-### 📩 Email Spam Detection  
+### 📩 **1. Spam Email Detection**
 - TF-IDF Vectorizer  
-- Logistic Regression Classifier  
-- **98–99% Accuracy**  
+- Logistic Regression Model  
+- ~98–99% accuracy  
 - Real-time predictions  
-
-### 🔗 URL Phishing Analysis  
-✔ Suspicious TLD check (`.xyz`, `.top`, `.icu`, `.zip`)  
-✔ Shortened URL detection (`bit.ly`, `t.co`)  
-✔ IP-based URL detection  
-✔ Keyword detection (`login`, `reset`, `verify`, `bank`)  
-✔ Per-URL risk scoring  
-
-### 📱 QR Code Support (Text Only)
-Streamlit Cloud **cannot install zbar**,  
-so QR **images cannot be decoded**.
-
-But **decoded text can be pasted and analyzed** ✔
-
-### 📊 Dashboard Visualizations  
-- Spam vs Not-Spam Bar Chart  
-- Gauge Meter – Total Risk Score  
-- URL Risk Donut Chart  
-- Suspicious Keyword Frequency Chart  
+- Lightweight & CPU-optimized  
 
 ---
 
-## 🛠 Tech Stack  
+### 🔗 **2. URL Phishing Detector**
+Detects:
+
+✔ Suspicious domain endings (.xyz, .top, .icu, .loan…)  
+✔ URL shorteners (bit.ly, t.co, tinyurl…)  
+✔ IP-based URLs  
+✔ Malicious keywords (login, verify, bank, reset…)  
+✔ Risk score per URL  
+
+---
+
+### 📱 **3. QR Code Support (Text Only)**
+⚠ **Streamlit Cloud does NOT support zbar**, so QR images cannot be decoded.  
+However, decoded **QR text can be pasted** and analyzed safely.
+
+---
+
+### 📊 **4. Visual Dashboard**
+Includes:
+
+📌 Spam vs Not-Spam Bar Chart  
+📌 Overall Risk Score Gauge  
+📌 URL Risk Donut Chart  
+📌 Suspicious Keyword Frequency Graph  
+
+---
+
+## 🛠 **Tech Stack**
 
 | Component | Technology |
 |----------|------------|
 | Frontend | Streamlit |
-| ML Model | Scikit-learn |
+| ML Model | Scikit-learn (TF-IDF + Logistic Regression) |
 | Charts | Plotly |
 | Language | Python 3.10 |
 | Deployment | Streamlit Cloud |
 
 ---
 
-## 📂 Folder Structure  
-*(Folder structure fixed — perfectly formatted)*
+# 📂 **Project Folder Structure**
+
+```text
 email-spam-detector/
 │
 ├── app/
@@ -96,22 +99,53 @@ email-spam-detector/
 ├── src/
 │   ├── __init__.py
 │   ├── config.py                      # Configuration paths/settings
-│   ├── data_prep.py                   # Data preprocessing
-│   ├── evaluate.py                    # Model evaluation scripts
-│   ├── explain.py                     # SHAP/explainability scripts
+│   ├── data_prep.py                   # Data preprocessing steps
+│   ├── evaluate.py                    # Model evaluation functions
+│   ├── explain.py                     # Explainability scripts (SHAP)
 │   ├── export_onnx.py                 # ONNX export utility
-│   ├── predict.py                     # Baseline prediction script
-│   ├── predict_hybrid.py              # Hybrid model prediction
-│   ├── train_baseline.py              # Train TF-IDF Logistic Regression
-│   ├── train_hybrid.py                # Train CatBoost + MiniLM hybrid
-│   └── train_transformer.py           # Train transformer embeddings
+│   ├── predict.py                     # Baseline TF-IDF predictions
+│   ├── predict_hybrid.py              # (Optional) Hybrid model prediction
+│   ├── train_baseline.py              # Train logistic regression baseline
+│   ├── train_hybrid.py                # Train CatBoost + Transformer model
+│   └── train_transformer.py           # Train MiniLM embeddings
 │
 ├── notebooks/
-│   └── *.ipynb                        # Experiments & EDA
+│   └── *.ipynb                        # EDA & experimentation notebooks
 │
-├── catboost_info/                    # CatBoost auto logs
+├── catboost_info/                     # CatBoost training logs
 │
-├── setup_structure.py                 # Auto folder setup script
-├── requirements.txt                   # Dependency list
-├── README.md                          # Project documentation
+├── requirements.txt                   # Python dependencies
+├── README.md                          # Documentation
 └── LICENSE                            # MIT License
+
+Run This Project Locally
+git clone https://github.com/sajjala-siddardha/email-spam-detector.git
+cd email-spam-detector
+pip install -r requirements.txt
+streamlit run app/streamlit_app.py
+
+🌐 Deploy to Streamlit Cloud
+Go to: https://share.streamlit.io
+Click New App
+Select your forked repository
+App settings:
+Field	Value
+Repo	YOUR-USERNAME/email-spam-detector
+Branch	main
+File	app/streamlit_app.py
+Click Deploy
+Done! 🎉 Your app is now live.
+
+📜 License
+This project is licensed under the MIT License.
+You are free to use, modify, and distribute it.
+
+👨‍💻 Developer
+Sajjala Siddardha
+AIML @ SRKR Engineering College
+📧 Email: siddardhagaming@gmail.com
+🌐 Portfolio: https://sajjala-portfolio.vercel.app
+🐙 GitHub: https://github.com/sajjala-siddardha
+
+⭐ Support This Project
+If this project helped you, please ⭐ star the repo — it motivates future updates!
