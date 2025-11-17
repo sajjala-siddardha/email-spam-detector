@@ -17,6 +17,8 @@ from collections import Counter
 
 import plotly.express as px
 import plotly.graph_objects as go
+# ========================= PAGE CONFIG =========================
+st.set_page_config(page_title="AI Spam Detector", page_icon="⚡", layout="wide")
 
 # ========================= MODEL PATH ==========================
 BASELINE_MODEL_PATH = Path(PROJECT_ROOT, "models/baseline_model.pkl")
@@ -150,8 +152,7 @@ def risk_level_label(score):
     return "🟩 LOW RISK"
 
 
-# ========================= PAGE CONFIG =========================
-st.set_page_config(page_title="AI Spam Detector", page_icon="⚡", layout="wide")
+
 
 
 # ========================= CUSTOM CSS ==========================
