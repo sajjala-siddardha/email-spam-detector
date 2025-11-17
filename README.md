@@ -117,35 +117,41 @@ email-spam-detector/
 ├── requirements.txt                   # Python dependencies
 ├── README.md                          # Documentation
 └── LICENSE                            # MIT License
+```
+## ⚙️ Run This Project Locally
 
-Run This Project Locally
+```bash
 git clone https://github.com/sajjala-siddardha/email-spam-detector.git
 cd email-spam-detector
 pip install -r requirements.txt
 streamlit run app/streamlit_app.py
+```
+## 🌐 Deploy to Streamlit Cloud
 
-🌐 Deploy to Streamlit Cloud
-Go to: https://share.streamlit.io
-Click New App
-Select your forked repository
-App settings:
-Field	Value
-Repo	YOUR-USERNAME/email-spam-detector
-Branch	main
-File	app/streamlit_app.py
-Click Deploy
-Done! 🎉 Your app is now live.
+1. Open: https://share.streamlit.io  
+2. Click **"New App"**
+3. Select your **forked GitHub repository**
+4. Fill in the app settings:
 
-📜 License
-This project is licensed under the MIT License.
-You are free to use, modify, and distribute it.
+```text
+Repo:   YOUR-USERNAME/email-spam-detector
+Branch: main
+File:   app/streamlit_app.py
+```
+5. Click **Deploy**
+6. 🎉 Done! Your app is now live on Streamlit Cloud.
 
-👨‍💻 Developer
-Sajjala Siddardha
-AIML @ SRKR Engineering College
-📧 Email: siddardhagaming@gmail.com
-🌐 Portfolio: https://sajjala-portfolio.vercel.app
+## 📜 License
+This project is licensed under the **MIT License**.
+You are free to **use**, **modify**, **distribute**, and **commercially deploy** this project as long as the original license is included.
+
+## 👨‍💻 Developer
+**Sajjala Siddardha**  
+AIML @ SRKR Engineering College  
+📧 Email: **siddardhagaming@gmail.com**  
+🌐 Portfolio: https://sajjala-portfolio.vercel.app  
 🐙 GitHub: https://github.com/sajjala-siddardha
 
-⭐ Support This Project
-If this project helped you, please ⭐ star the repo — it motivates future updates!
+## ⭐ Support This Project
+If this project helped you, please **⭐ star the repository**.  
+Your support motivates future improvements and new features!
