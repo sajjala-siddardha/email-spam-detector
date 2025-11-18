@@ -320,6 +320,6 @@ with col_right:
     st.markdown("### 👨‍💻 Developer")
     st.write("**Sajjala Siddardha**")
     st.write("AIML @ SRKR Engineering College")
-    st.write("[🌐 Portfolio](https://sajjala-portfolio.vercel.app)")
+    st.write("[🌐 Portfolio](https://siddardha-portfolio.vercel.app)")
     st.write("📧 Email: **siddardhagaming@gmail.com**")
     st.markdown("</div>", unsafe_allow_html=True)
